@@ -21,10 +21,10 @@ public class Comment {
 	@Column(name = "author")
 	private String author;
 
-	@Column(name = "comment_text")
+	@Column(name = "text")
 	private String text;
 
-	@Column(name = "dateCreated")
+	@Column(name = "date_created")
 	private LocalDateTime dateCreated;
 
 	@ManyToOne
