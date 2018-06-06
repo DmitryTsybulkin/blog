@@ -6,13 +6,12 @@ import com.pany.blog.exceptions.EntryDuplicateException;
 import com.pany.blog.exceptions.ResourceNotFoundException;
 import com.pany.blog.model.Role;
 import com.pany.blog.model.User;
+import com.pany.blog.repositories.RoleRep;
 import com.pany.blog.repositories.UserRep;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 @Service
 public class UserService {
@@ -21,35 +20,39 @@ public class UserService {
 
     private final UserRep userRep;
 
+    private final RoleRep roleRep;
+
     private final SecurityPasswordEncoder passwordEncoder;
 
     private final MailImpl mail;
 
     @Autowired
-    public UserService(UserRep userRep, SecurityPasswordEncoder passwordEncoder, MailImpl mail) {
+    public UserService(UserRep userRep, RoleRep roleRep, SecurityPasswordEncoder passwordEncoder, MailImpl mail) {
         this.userRep = userRep;
+        this.roleRep = roleRep;
         this.passwordEncoder = passwordEncoder;
         this.mail = mail;
     }
 
     public void createUser(UserDto reqUserDto) {
 
-        if (userRep.findUserByLogin(reqUserDto.login) != null) {
+        if (userRep.findUserByLogin(reqUserDto.login).isPresent()) {
             throw new EntryDuplicateException();
         }
 
-        if (reqUserDto.roles.isEmpty()) {
-            reqUserDto.roles.add(new Role("USER_ROLE"));
-        }
-
         String password = generatePassword();
-        userRep.save(new User(reqUserDto.login, passwordEncoder.encoder().encode(password), reqUserDto.roles, null));
-        mail.sendMail(reqUserDto.email, password);
-
+        userRep.save(new User(reqUserDto.login,
+                passwordEncoder.encoder().encode(password),
+                new HashSet<>(Collections.singleton(roleRep.getOne(2L))),
+                null));
     }
 
-    public UserDto getUserById(Long id) {
+    public UserDto getUserById(final Long id) {
         return toDto(userRep.findById(id).orElseThrow(ResourceNotFoundException::new));
+    }
+
+    public UserDto getUserByLogin(final String login) {
+        return toDto(userRep.findUserByLogin(login).orElseThrow(ResourceNotFoundException::new));
     }
 
     public List<UserDto> getUsersList() {
@@ -59,7 +62,7 @@ public class UserService {
         return userDtos;
     }
 
-    public void updateUser(UserDto userDto) {
+    public void updateUser(final UserDto userDto) {
         User user = userRep.findById(userDto.id).orElseThrow(ResourceNotFoundException::new);
 
         user.setLogin(userDto.login);
@@ -67,13 +70,12 @@ public class UserService {
         if (userDto.changePassword) {
             String password = generatePassword();
             user.setPassword(password);
-            mail.sendMail(userDto.email, password);
         }
 
         user.setRoles(userDto.roles);
     }
 
-    public void deleteUser(Long id) {
+    public void deleteUser(final Long id) {
         userRep.delete(userRep.findById(id).orElseThrow(ResourceNotFoundException::new));
     }
 
