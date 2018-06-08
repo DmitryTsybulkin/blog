@@ -3,11 +3,8 @@ package com.pany.blog.services;
 import com.pany.blog.dtos.UserDto;
 import com.pany.blog.exceptions.EntryDuplicateException;
 import com.pany.blog.exceptions.ResourceNotFoundException;
-import com.pany.blog.model.Post;
-import com.pany.blog.model.PostBuilder;
 import com.pany.blog.model.Role;
 import com.pany.blog.model.User;
-import com.pany.blog.repositories.PostRep;
 import com.pany.blog.repositories.RoleRep;
 import com.pany.blog.repositories.UserRep;
 import org.junit.After;
@@ -18,9 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import javax.persistence.EntityExistsException;
-import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -34,25 +31,41 @@ public class UserServiceTest {
     @Autowired
     private UserRep userRep;
 
+    @Autowired
+    private RoleRep roleRep;
+
+    @Before
+    public void initRoles() throws Exception {
+        roleRep.save(new Role("ADMIN"));
+    }
+
     @Test
-    public void createUser() {
+    public void createUser() throws Exception {
         UserDto dto = new UserDto();
         String login = "login";
         dto.email = "email";
         dto.login = login;
+        dto.password = "password";
+        dto.roles = new ArrayList<>();
+        dto.roles.add("ADMIN");
         userService.createUser(dto);
         UserDto targetUser = userService.getUserByLogin(login);
         assertNotNull(targetUser);
         assertNotNull(targetUser.id);
+        assertEquals(targetUser.email, dto.email);
+        assertEquals(targetUser.login, dto.login);
         assertFalse(targetUser.roles.isEmpty());
     }
 
     @Test(expected = EntryDuplicateException.class)
-    public void createUserFailedEntryDuplicate() {
+    public void createUserFailedEntryDuplicate() throws Exception {
         UserDto dto = new UserDto();
         String login = "login";
         dto.email = "email";
         dto.login = login;
+        dto.password = "password";
+        dto.roles = new ArrayList<>();
+        dto.roles.add("ADMIN");
         userService.createUser(dto);
 
         UserDto anotherDto = new UserDto();
@@ -62,11 +75,14 @@ public class UserServiceTest {
     }
 
     @Test
-    public void getUserById() {
+    public void getUserById() throws Exception {
         UserDto dto = new UserDto();
         String login = "login";
         dto.email = "email";
         dto.login = login;
+        dto.password = "password";
+        dto.roles = new ArrayList<>();
+        dto.roles.add("ADMIN");
         userService.createUser(dto);
 
         UserDto pointDto = userService.getUserByLogin(login);
@@ -74,25 +90,32 @@ public class UserServiceTest {
         assertNotNull(targetDto);
         assertNotNull(targetDto.login);
         assertEquals(targetDto.login, login);
+        assertEquals(targetDto.email, dto.email);
         assertFalse(targetDto.roles.isEmpty());
     }
 
     @Test(expected = ResourceNotFoundException.class)
-    public void getUserByIdFailedUserDoesNotExists() {
+    public void getUserByIdFailedUserDoesNotExists() throws Exception {
         Long id = 5000L;
         userService.getUserById(id);
     }
 
     @Test
-    public void getUsersList() {
+    public void getUsersList() throws Exception {
         UserDto dto = new UserDto();
         dto.email = "email";
         dto.login = "login";
+        dto.password = "password";
+        dto.roles = new ArrayList<>();
+        dto.roles.add("ADMIN");
         userService.createUser(dto);
 
         UserDto anotherDto = new UserDto();
         anotherDto.email = "anotherEmail";
         anotherDto.login = "anotherLogin";
+        anotherDto.password = "anotherPassword";
+        anotherDto.roles = new ArrayList<>();
+        anotherDto.roles.add("ADMIN");
         userService.createUser(anotherDto);
 
         List<UserDto> dtos = userService.getUsersList();
@@ -103,32 +126,41 @@ public class UserServiceTest {
     }
 
     @Test
-    public void updateUser() {
+    public void updateUser() throws Exception {
         UserDto dto = new UserDto();
         String login = "login";
         dto.email = "email";
         dto.login = login;
+        dto.email = "mail";
+        dto.password = "password";
+        dto.roles = new ArrayList<>();
+        dto.roles.add("ADMIN");
         userService.createUser(dto);
 
         Long id = userService.getUserByLogin(login).id;
         UserDto anotherDto = new UserDto();
         anotherDto.login = "topLogin";
-        anotherDto.changePassword = true;
+        anotherDto.email = "anotherMail";
         anotherDto.id = id;
-        anotherDto.roles = new HashSet<>();
+        anotherDto.roles = new ArrayList<String>();
+        anotherDto.roles.add("ADMIN");
         userService.updateUser(anotherDto);
 
         UserDto targetDto = userService.getUserById(id);
-        assertEquals(targetDto.login, "topLogin");
+        assertEquals(targetDto.login, anotherDto.login);
+        assertEquals(targetDto.email, anotherDto.email);
         assertFalse(targetDto.roles.isEmpty());
     }
 
     @Test(expected = ResourceNotFoundException.class)
-    public void deleteUser() {
+    public void deleteUser() throws Exception {
         UserDto dto = new UserDto();
         String login = "login";
         dto.email = "email";
         dto.login = login;
+        dto.password = "password";
+        dto.roles = new ArrayList<>();
+        dto.roles.add("ADMIN");
         userService.createUser(dto);
 
         Long id = userService.getUserByLogin(login).id;
@@ -138,34 +170,38 @@ public class UserServiceTest {
     }
 
     @Test(expected = ResourceNotFoundException.class)
-    public void deleteUserFailedUserDoesNotExists() {
+    public void deleteUserFailedUserDoesNotExists() throws Exception {
         userService.deleteUser(5000L);
     }
 
     @Test
-    public void toDto() {
-        User user = new User("login", "password", new HashSet<>(), new ArrayList<>());
+    public void toDto() throws Exception {
+        User user = new User("login", "password", "email", new HashSet<>(), new ArrayList<>());
         UserDto dto = userService.toDto(user);
         assertEquals(dto.login, user.getLogin());
-        assertNotNull(dto.posts);
+        assertEquals(dto.email, user.getEmail());
         assertNotNull(dto.roles);
     }
 
     @Test
-    public void fromDto() {
+    public void fromDto() throws Exception {
         UserDto dto = new UserDto();
         dto.login = "login";
-        dto.roles = new HashSet<>();
-        dto.posts = new ArrayList<>();
-        User user = userService.fromDto(dto, "password");
+        dto.email = "email";
+        dto.password = "password";
+        dto.roles = new ArrayList<String>();
+        dto.roles.add("ADMIN");
+        User user = userService.fromDto(dto);
         assertEquals(user.getLogin(), dto.login);
-        assertNotNull(user.getRoles());
-        assertNotNull(user.getPosts());
+        assertEquals(user.getEmail(), dto.email);
+        assertFalse(user.getRoles().isEmpty());
+        assertEquals(user.getPassword(), "password");
     }
 
     @After
     public void dropTable() throws Exception {
         userRep.deleteAllInBatch();
+        roleRep.deleteAllInBatch();
     }
 
 }

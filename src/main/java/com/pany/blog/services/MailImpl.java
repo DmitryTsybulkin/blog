@@ -15,12 +15,12 @@ public class MailImpl {
         this.mailSender = mailSender;
     }
 
-    public void sendMail(String email, String password) {
+    public void sendMail(String email) {
         SimpleMailMessage mailMessage = new SimpleMailMessage();
 
         mailMessage.setTo(email);
         mailMessage.setSubject("BLOG");
-        mailMessage.setText("Пароль для блога: " + password + "\n" + "Никому его не показывайте, а лучше запомните и удалите это письмо.");
+        mailMessage.setText("Поддтверждение регистрации...");
 
         mailSender.send(mailMessage);
     }

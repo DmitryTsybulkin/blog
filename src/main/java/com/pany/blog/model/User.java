@@ -18,6 +18,9 @@ public class User {
 	@Column(name = "password")
 	private String password;
 
+	@Column(name = "email")
+	private String email;
+
 	@Column(name = "roles")
 	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(name = "roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role"))
@@ -29,9 +32,10 @@ public class User {
 	public User() {
 	}
 
-	public User(String login, String password, Set<Role> roles, List<Post> posts) {
+	public User(String login, String password, String email, Set<Role> roles, List<Post> posts) {
 		this.login = login;
 		this.password = password;
+		this.email = email;
 		this.roles = roles;
 		this.posts = posts;
 	}
@@ -74,5 +78,13 @@ public class User {
 
 	public String getPassword() {
 		return password;
+	}
+
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
 	}
 }

@@ -1,16 +1,10 @@
 package com.pany.blog.model;
 
 import com.pany.blog.exceptions.ResourceNotFoundException;
-import com.pany.blog.model.Post;
-import com.pany.blog.model.PostBuilder;
-import com.pany.blog.model.Role;
-import com.pany.blog.model.User;
 import com.pany.blog.repositories.PostRep;
 import com.pany.blog.repositories.RoleRep;
 import com.pany.blog.repositories.UserRep;
-import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +38,7 @@ public class UserTests {
 	@Before
 	public void initDb() throws Exception {
 		roles.add(roleRep.save(new Role("ADMIN")));
-		user = userRep.save(new User("login", "password", roles, posts));
+		user = userRep.save(new User("login", "password", "email", roles, posts));
 		posts.add(postRep.save(new PostBuilder()
 				.withHeader("header")
 				.withContent("content")
@@ -56,10 +50,11 @@ public class UserTests {
 
 	@Test
 	public void createUser() throws Exception {
-		User noob = userRep.save(new User("log", "pass", roles, posts));
+		User noob = userRep.save(new User("log", "pass", "email", roles, posts));
 		Optional<User> targetUser = Optional.of(userRep.findUserByLogin("log").orElseThrow(ResourceNotFoundException::new));
 		assertEquals(targetUser.get().getId(), noob.getId());
 		assertEquals(targetUser.get().getLogin(), noob.getLogin());
+		assertEquals(targetUser.get().getEmail(), noob.getEmail());
 		assertTrue(targetUser.get().getRoles().containsAll(noob.getRoles()));
 		assertTrue(targetUser.get().getPosts().containsAll(noob.getPosts()));
 		userRep.delete(noob);
@@ -72,6 +67,7 @@ public class UserTests {
 		Optional<User> targetUser = userRep.findUserByLogin(user.getLogin());
 		assertEquals(targetUser.get().getId(), user.getId());
 		assertEquals(targetUser.get().getLogin(), user.getLogin());
+		assertEquals(targetUser.get().getEmail(), user.getEmail());
 		assertTrue(targetUser.get().getPosts().containsAll(user.getPosts()));
 		assertTrue(targetUser.get().getRoles().containsAll(user.getRoles()));
 	}

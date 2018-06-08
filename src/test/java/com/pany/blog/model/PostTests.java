@@ -1,11 +1,6 @@
 package com.pany.blog.model;
 
 import com.pany.blog.exceptions.ResourceNotFoundException;
-import com.pany.blog.model.Comment;
-import com.pany.blog.model.Post;
-import com.pany.blog.model.PostBuilder;
-import com.pany.blog.model.Role;
-import com.pany.blog.model.User;
 import com.pany.blog.repositories.CommentRep;
 import com.pany.blog.repositories.PostRep;
 import com.pany.blog.repositories.RoleRep;
@@ -40,19 +35,15 @@ public class PostTests {
     private CommentRep commentRep;
 
     private Set<Role> roles = new HashSet<>();
-
     private List<Comment> comments = new ArrayList<>();
-
     private List<Post> posts = new ArrayList<>();
-
     private User user = new User();
-
     private Post post;
 
     @Before
     public void initDb() throws Exception {
         roles.add(roleRep.save(new Role("ADMIN")));
-        user = userRep.save(new User("login", "password", roles, null));
+        user = userRep.save(new User("login", "password", "email", roles, null));
         post = postRep.save(new PostBuilder()
                 .withHeader("header")
                 .withContent("content")

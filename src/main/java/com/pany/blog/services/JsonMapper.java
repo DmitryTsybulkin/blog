@@ -2,67 +2,50 @@ package com.pany.blog.services;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.pany.blog.model.*;
+import com.pany.blog.dtos.RoleDto;
+import com.pany.blog.dtos.UserDto;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 
 @Service
 public class JsonMapper {
 
-    public static String toJson(final Object obj) {
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+
+    public String toJson(final Object obj) {
         try {
             final ObjectMapper mapper = new ObjectMapper();
             return mapper.writeValueAsString(obj);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (IOException e) {
+            logger.error("ERROR SUBMITTING AN ENTITY TO A JSON");
         }
+        return null;
     }
 
-    public static List<BlogAttrs> toBlogAttrs(final File json) {
+    public List<RoleDto> toRole(final InputStream json) {
         try {
             ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(json, new TypeReference<List<BlogAttrs>>(){});
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            return mapper.readValue(json, new TypeReference<List<RoleDto>>(){});
+        } catch (IOException e) {
+            logger.error("ERROR SUBMITTING AN ROLE-JSON TO A DB");
         }
+        return null;
     }
 
-    public static List<Comment> toComment(final File json) {
+    public List<UserDto> toUser(final InputStream json) {
         try {
             ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(json, new TypeReference<List<Comment>>(){});
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            return mapper.readValue(json, new TypeReference<List<UserDto>>(){});
+        } catch (IOException e) {
+            logger.error("ERROR SUBMITTING AN USER-JSON TO A DB");
+            e.printStackTrace();
         }
-    }
-
-    public static List<Post> toPost(final File json) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(json, new TypeReference<List<Post>>(){});
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static List<Role> toRole(final File json) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(json, new TypeReference<List<Role>>(){});
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static List<User> toUser(final File json) {
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            return mapper.readValue(json, new TypeReference<List<User>>(){});
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return null;
     }
 
 }

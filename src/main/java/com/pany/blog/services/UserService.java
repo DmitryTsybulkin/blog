@@ -8,23 +8,22 @@ import com.pany.blog.model.Role;
 import com.pany.blog.model.User;
 import com.pany.blog.repositories.RoleRep;
 import com.pany.blog.repositories.UserRep;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
 
-    private final static int PASSWORD_LENGTH = 8;
-
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final UserRep userRep;
-
     private final RoleRep roleRep;
-
     private final SecurityPasswordEncoder passwordEncoder;
-
     private final MailImpl mail;
 
     @Autowired
@@ -39,74 +38,61 @@ public class UserService {
     public void createUser(UserDto reqUserDto) {
 
         if (userRep.findUserByLogin(reqUserDto.login).isPresent()) {
+            logger.warn("User with login: " + reqUserDto.login + " already exists.");
             throw new EntryDuplicateException();
         }
 
-        String password = generatePassword();
         userRep.save(new User(reqUserDto.login,
-                passwordEncoder.encoder().encode(password),
-                new HashSet<>(Collections.singleton(roleRep.getRoleByName("USER_ROLE"))),
+                passwordEncoder.encoder().encode(reqUserDto.password),
+                reqUserDto.email, reqUserDto.roles.stream().map(Role::new).collect(Collectors.toSet()),
                 null));
+        logger.info("Created new user with login: " + reqUserDto.login);
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public UserDto getUserById(final Long id) {
-        return toDto(userRep.findById(id).orElseThrow(ResourceNotFoundException::new));
+        return toDto(userRep.findById(id).orElseThrow(this::getResourceNotFoundException));
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public UserDto getUserByLogin(final String login) {
-        return toDto(userRep.findUserByLogin(login).orElseThrow(ResourceNotFoundException::new));
+        return toDto(userRep.findUserByLogin(login).orElseThrow(this::getResourceNotFoundException));
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<UserDto> getUsersList() {
-        List<User> users = userRep.findAll();
-        List<UserDto> userDtos = new ArrayList<>();
-        users.forEach(user -> userDtos.add(toDto(user)));
-        return userDtos;
+        return userRep.findAll().stream().map(this::toDto).collect(Collectors.toList());
     }
 
     @Transactional
     public void updateUser(final UserDto userDto) {
-        User user = userRep.findById(userDto.id).orElseThrow(ResourceNotFoundException::new);
-
+        User user = userRep.findById(userDto.id).orElseThrow(this::getResourceNotFoundException);
         user.setLogin(userDto.login);
-
-        if (userDto.changePassword) {
-            String password = generatePassword();
-            user.setPassword(password);
-        }
-
+        user.setPassword(userDto.password);
+        user.setEmail(userDto.email);
+        user.setRoles(userDto.roles.stream().map(Role::new).collect(Collectors.toSet()));
+        logger.info("User: " + user.getLogin() + " updated successfully.");
     }
 
     @Transactional
     public void deleteUser(final Long id) {
-        userRep.delete(userRep.findById(id).orElseThrow(ResourceNotFoundException::new));
+        userRep.delete(userRep.findById(id).orElseThrow(this::getResourceNotFoundException));
+        logger.info("User by id: " + id + " deleted successfully.");
     }
 
     public UserDto toDto(User user) {
-        UserDto userDto = new UserDto();
-        userDto.login = user.getLogin();
-        userDto.id = user.getId();
-        userDto.roles = user.getRoles();
-        userDto.posts = user.getPosts();
-        return userDto;
+        return new UserDto(user.getId(), user.getLogin(), user.getEmail(), user.getRoles().stream()
+                .map(Role::getName).collect(Collectors.toList()));
     }
 
-    public User fromDto(UserDto userDto, String password) {
-        return new User(userDto.login, password, userDto.roles, userDto.posts);
+    public User fromDto(UserDto userDto) {
+        return new User(userDto.login, userDto.password, userDto.email, userDto.roles.stream()
+                .map(roleRep::getRoleByName).collect(Collectors.toSet()), null);
     }
 
-    private static String generatePassword() {
-        String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        Random rnd = new Random();
-
-        StringBuilder sb = new StringBuilder(PASSWORD_LENGTH);
-        for (int i = 0; i < PASSWORD_LENGTH; i++) {
-            sb.append(AB.charAt(rnd.nextInt(AB.length())));
-        }
-        return sb.toString();
+    private ResourceNotFoundException getResourceNotFoundException() {
+        logger.warn("User not found.");
+        return new ResourceNotFoundException();
     }
 
 }

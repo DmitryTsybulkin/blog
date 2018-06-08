@@ -1,18 +1,21 @@
 package com.pany.blog.dtos;
 
-import com.pany.blog.model.Post;
-import com.pany.blog.model.Role;
-
 import java.util.List;
-import java.util.Set;
 
 public class UserDto {
 
     public Long id;
     public String login;
     public String email;
-    public Set<Role> roles;
-    public boolean changePassword;
-    public List<Post> posts;
+    public String password;
+    public List<String> roles;
 
+    public UserDto(Long id, String login, String email, List<String> roles) {
+        this.id = id;
+        this.login = login;
+        this.email = email;
+        this.roles = roles;
+    }
+
+    public UserDto() {}
 }
