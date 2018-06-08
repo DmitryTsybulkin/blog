@@ -10,6 +10,7 @@ import com.pany.blog.repositories.RoleRep;
 import com.pany.blog.repositories.UserRep;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -34,6 +35,7 @@ public class UserService {
         this.mail = mail;
     }
 
+    @Transactional
     public void createUser(UserDto reqUserDto) {
 
         if (userRep.findUserByLogin(reqUserDto.login).isPresent()) {
@@ -43,18 +45,21 @@ public class UserService {
         String password = generatePassword();
         userRep.save(new User(reqUserDto.login,
                 passwordEncoder.encoder().encode(password),
-                new HashSet<>(Collections.singleton(roleRep.getOne(2L))),
+                new HashSet<>(Collections.singleton(roleRep.getRoleByName("USER_ROLE"))),
                 null));
     }
 
+    @Transactional
     public UserDto getUserById(final Long id) {
         return toDto(userRep.findById(id).orElseThrow(ResourceNotFoundException::new));
     }
 
+    @Transactional
     public UserDto getUserByLogin(final String login) {
         return toDto(userRep.findUserByLogin(login).orElseThrow(ResourceNotFoundException::new));
     }
 
+    @Transactional
     public List<UserDto> getUsersList() {
         List<User> users = userRep.findAll();
         List<UserDto> userDtos = new ArrayList<>();
@@ -62,6 +67,7 @@ public class UserService {
         return userDtos;
     }
 
+    @Transactional
     public void updateUser(final UserDto userDto) {
         User user = userRep.findById(userDto.id).orElseThrow(ResourceNotFoundException::new);
 
@@ -72,9 +78,9 @@ public class UserService {
             user.setPassword(password);
         }
 
-        user.setRoles(userDto.roles);
     }
 
+    @Transactional
     public void deleteUser(final Long id) {
         userRep.delete(userRep.findById(id).orElseThrow(ResourceNotFoundException::new));
     }
