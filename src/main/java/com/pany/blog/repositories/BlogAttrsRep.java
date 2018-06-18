@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BlogAttrsRep extends JpaRepository<BlogAttrs, Long> {
+    BlogAttrs getBlogAttrsByValue(final String value);
 }
