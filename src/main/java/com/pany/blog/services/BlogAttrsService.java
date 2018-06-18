@@ -1,6 +1,6 @@
 package com.pany.blog.services;
 
-import com.pany.blog.dto.BlogAttrsDto;
+import com.pany.blog.dtos.BlogAttrsDto;
 import com.pany.blog.exceptions.ResourceNotFoundException;
 import com.pany.blog.model.BlogAttrs;
 import com.pany.blog.repositories.BlogAttrsRep;
@@ -28,6 +28,7 @@ public class BlogAttrsService {
     @Transactional
     public void createBlogAttrs(final BlogAttrsDto dto) {
         blogAttrsRep.save(new BlogAttrs(dto.value, dto.description));
+        logger.info("CREATED NEW BLOG ATTRS ENTRY");
     }
 
     @Transactional(readOnly = true)

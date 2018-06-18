@@ -1,6 +1,6 @@
 package com.pany.blog.services;
 
-import com.pany.blog.dto.BlogAttrsDto;
+import com.pany.blog.dtos.BlogAttrsDto;
 import com.pany.blog.exceptions.ResourceNotFoundException;
 import com.pany.blog.model.BlogAttrs;
 import com.pany.blog.repositories.BlogAttrsRep;
@@ -96,8 +96,7 @@ public class BlogAttrsServiceTest {
     @Test
     public void deleteBlogAttrs() throws Exception {
         BlogAttrsDto dto = new BlogAttrsDto();
-        String value = "blogName";
-        dto.value = value;
+        dto.value = "blogName";
         dto.description = "blogDescription";
         blogAttrsService.createBlogAttrs(dto);
         BlogAttrsDto pointDto = blogAttrsService.getBlogAttrsByValue(dto.value);
