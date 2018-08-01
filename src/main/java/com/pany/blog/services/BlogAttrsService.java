@@ -10,8 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class BlogAttrsService {
@@ -28,26 +28,22 @@ public class BlogAttrsService {
     @Transactional
     public void createBlogAttrs(final BlogAttrsDto dto) {
         blogAttrsRep.save(new BlogAttrs(dto.value, dto.description));
-        logger.info("CREATED NEW BLOG ATTRS ENTRY");
+        logger.info("Created new blog attributes entry.");
     }
 
     @Transactional(readOnly = true)
     public BlogAttrsDto getBlogAttrsById(final Long key) {
-        BlogAttrs blogAttrs = blogAttrsRep.findById(key).orElseThrow(ResourceNotFoundException::new);
-        return toDto(blogAttrs);
+        return toDto(blogAttrsRep.findById(key).orElseThrow(ResourceNotFoundException::new));
     }
 
     @Transactional(readOnly = true)
     public BlogAttrsDto getBlogAttrsByValue(final String value) {
-        return toDto(blogAttrsRep.getBlogAttrsByValue(value));
+        return toDto(blogAttrsRep.getBlogAttrsByValue(value).orElseThrow(ResourceNotFoundException::new));
     }
 
     @Transactional(readOnly = true)
     public List<BlogAttrsDto> getBlogAttrsList() {
-        List<BlogAttrs> blogAttrs = blogAttrsRep.findAll();
-        List<BlogAttrsDto> blogAttrsDtos = new ArrayList<>();
-        blogAttrs.forEach(blogAttrsElement -> blogAttrsDtos.add(toDto(blogAttrsElement)));
-        return blogAttrsDtos;
+        return blogAttrsRep.findAll().stream().map(this::toDto).collect(Collectors.toList());
     }
 
     @Transactional
@@ -55,19 +51,17 @@ public class BlogAttrsService {
         BlogAttrs blogAttrs = blogAttrsRep.findById(dto.key).orElseThrow(ResourceNotFoundException::new);
         blogAttrs.setValue(dto.value);
         blogAttrs.setDescription(dto.description);
+        logger.info("Blog attributes: " + blogAttrs.getKey() + " updated successfully.");
     }
 
     @Transactional
     public void deleteBlogAttrs(final Long key) {
         blogAttrsRep.delete(blogAttrsRep.findById(key).orElseThrow(ResourceNotFoundException::new));
+        logger.info("Blog attributes: " + key + " deleted successfully.");
     }
 
     public BlogAttrsDto toDto(final BlogAttrs blogAttrs) {
-        BlogAttrsDto dto = new BlogAttrsDto();
-        dto.key = blogAttrs.getKey();
-        dto.value = blogAttrs.getValue();
-        dto.description = blogAttrs.getDescription();
-        return dto;
+        return new BlogAttrsDto(blogAttrs.getKey(), blogAttrs.getValue(), blogAttrs.getDescription());
     }
 
     public BlogAttrs fromDto(final BlogAttrsDto dto) {

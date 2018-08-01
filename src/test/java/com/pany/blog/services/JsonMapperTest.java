@@ -1,5 +1,6 @@
 package com.pany.blog.services;
 
+import com.pany.blog.dtos.BlogAttrsDto;
 import com.pany.blog.dtos.RoleDto;
 import com.pany.blog.dtos.UserDto;
 import org.junit.Test;
@@ -59,6 +60,15 @@ public class JsonMapperTest {
         assertEquals(userDtos.get(0).email, "mail");
         assertEquals(userDtos.get(0).password, "password");
         assertEquals(userDtos.get(0).roles.get(0), "ADMIN_ROLE");
+    }
+
+    @Test
+    public void toBlogAttrs() throws Exception {
+        String attrs = "[{\"value\":\"valueeee\",\"description\":\"description\"}]";
+        InputStream in = new ByteArrayInputStream(attrs.getBytes());
+        List<BlogAttrsDto> dtos = jsonMapper.toBlogAttrsDtos(in);
+        assertEquals(dtos.get(0).value, "valueeee");
+        assertEquals(dtos.get(0).description, "description");
     }
 
 }

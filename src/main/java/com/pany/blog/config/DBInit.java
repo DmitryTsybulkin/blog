@@ -1,9 +1,12 @@
 package com.pany.blog.config;
 
+import com.pany.blog.dtos.BlogAttrsDto;
 import com.pany.blog.dtos.RoleDto;
 import com.pany.blog.dtos.UserDto;
+import com.pany.blog.model.BlogAttrs;
 import com.pany.blog.model.Role;
 import com.pany.blog.model.User;
+import com.pany.blog.repositories.BlogAttrsRep;
 import com.pany.blog.repositories.RoleRep;
 import com.pany.blog.repositories.UserRep;
 import com.pany.blog.services.JsonMapper;
@@ -28,13 +31,15 @@ public class DBInit implements ApplicationListener<ApplicationReadyEvent> {
     private JsonMapper jsonMapper;
     private RoleRep roleRep;
     private UserRep userRep;
+    private BlogAttrsRep blogAttrsRep;
     private SecurityPasswordEncoder encoder;
 
     @Autowired
-    public DBInit(JsonMapper jsonMapper, RoleRep roleRep, UserRep userRep, SecurityPasswordEncoder encoder) {
+    public DBInit(JsonMapper jsonMapper, RoleRep roleRep, UserRep userRep, BlogAttrsRep blogAttrsRep, SecurityPasswordEncoder encoder) {
         this.jsonMapper = jsonMapper;
         this.roleRep = roleRep;
         this.userRep = userRep;
+        this.blogAttrsRep = blogAttrsRep;
         this.encoder = encoder;
     }
 
@@ -43,6 +48,7 @@ public class DBInit implements ApplicationListener<ApplicationReadyEvent> {
         try {
             initRoles();
             initUser();
+            initBlogAttrs();
         } catch (IOException e) {
             logger.error("Error initializing DB: " + e.getMessage());
         }
@@ -74,6 +80,20 @@ public class DBInit implements ApplicationListener<ApplicationReadyEvent> {
             }
         } catch (IOException e) {
             logger.error("Error loading \"user\" entries to entity: " + e.getMessage());
+        }
+    }
+
+    @Transactional
+    void initBlogAttrs() throws IOException {
+        try (InputStream in =this.getClass().getClassLoader().getResourceAsStream("test-data/blogSettings.json")) {
+            List<BlogAttrsDto> dtos = jsonMapper.toBlogAttrsDtos(in);
+            if (dtos != null) {
+                blogAttrsRep.saveAll(dtos.stream().map(blogAttrsDto -> new BlogAttrs(blogAttrsDto.value,
+                        blogAttrsDto.description)).collect(Collectors.toList()));
+                logger.info("Blog attributes loaded successfully");
+            }
+        } catch (IOException e) {
+            logger.error("Error loading \"Blog attributes\" entries to entity: " + e.getMessage());
         }
     }
 

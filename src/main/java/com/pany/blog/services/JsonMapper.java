@@ -2,6 +2,7 @@ package com.pany.blog.services;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.pany.blog.dtos.BlogAttrsDto;
 import com.pany.blog.dtos.RoleDto;
 import com.pany.blog.dtos.UserDto;
 import org.slf4j.Logger;
@@ -43,6 +44,17 @@ public class JsonMapper {
             return mapper.readValue(json, new TypeReference<List<UserDto>>(){});
         } catch (IOException e) {
             logger.error("ERROR SUBMITTING AN USER-JSON TO A DB");
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public List<BlogAttrsDto> toBlogAttrsDtos(final InputStream json) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.readValue(json, new TypeReference<List<BlogAttrsDto>>(){});
+        } catch (IOException e) {
+            logger.error("ERROR SUBMITTING AN BlogAttrs-JSON TO A DB");
             e.printStackTrace();
         }
         return null;
