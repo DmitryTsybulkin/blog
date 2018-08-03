@@ -44,19 +44,20 @@ public class UserService {
 
         userRep.save(new User(reqUserDto.login,
                 passwordEncoder.encoder().encode(reqUserDto.password),
-                reqUserDto.email, reqUserDto.roles.stream().map(Role::new).collect(Collectors.toSet()),
+                reqUserDto.email,
+                reqUserDto.roles.stream().map(Role::new).collect(Collectors.toSet()),
                 null));
         logger.info("Created new user with login: " + reqUserDto.login);
     }
 
     @Transactional(readOnly = true)
     public UserDto getUserById(final Long id) {
-        return toDto(userRep.findById(id).orElseThrow(this::getResourceNotFoundException));
+        return toDto(userRep.findById(id).orElseThrow(this::getUserNotFoundException));
     }
 
     @Transactional(readOnly = true)
     public UserDto getUserByLogin(final String login) {
-        return toDto(userRep.findUserByLogin(login).orElseThrow(this::getResourceNotFoundException));
+        return toDto(userRep.findUserByLogin(login).orElseThrow(this::getUserNotFoundException));
     }
 
     @Transactional(readOnly = true)
@@ -66,7 +67,7 @@ public class UserService {
 
     @Transactional
     public void updateUser(final UserDto userDto) {
-        User user = userRep.findById(userDto.id).orElseThrow(this::getResourceNotFoundException);
+        User user = userRep.findById(userDto.id).orElseThrow(this::getUserNotFoundException);
         user.setLogin(userDto.login);
         user.setPassword(userDto.password);
         user.setEmail(userDto.email);
@@ -76,7 +77,7 @@ public class UserService {
 
     @Transactional
     public void deleteUser(final Long id) {
-        userRep.delete(userRep.findById(id).orElseThrow(this::getResourceNotFoundException));
+        userRep.delete(userRep.findById(id).orElseThrow(this::getUserNotFoundException));
         logger.info("User by id: " + id + " deleted successfully.");
     }
 
@@ -87,11 +88,16 @@ public class UserService {
 
     public User fromDto(UserDto userDto) {
         return new User(userDto.login, userDto.password, userDto.email, userDto.roles.stream()
-                .map(roleRep::getRoleByName).collect(Collectors.toSet()), null);
+                .map(s -> roleRep.getRoleByName(s).orElseThrow(this::getRoleNotFoundException)).collect(Collectors.toSet()), null);
     }
 
-    private ResourceNotFoundException getResourceNotFoundException() {
+    private ResourceNotFoundException getUserNotFoundException() {
         logger.warn("User not found.");
+        return new ResourceNotFoundException();
+    }
+
+    private ResourceNotFoundException getRoleNotFoundException() {
+        logger.warn("Role doesn't exists.");
         return new ResourceNotFoundException();
     }
 

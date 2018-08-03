@@ -198,6 +198,17 @@ public class UserServiceTest {
         assertEquals(user.getPassword(), "password");
     }
 
+    @Test(expected = ResourceNotFoundException.class)
+    public void fromDtoFailedRoleDoesntExists() throws Exception {
+        UserDto dto = new UserDto();
+        dto.login = "login";
+        dto.email = "email";
+        dto.password = "password";
+        dto.roles = new ArrayList<String>();
+        dto.roles.add("USER");
+        userService.fromDto(dto);
+    }
+
     @After
     public void dropTable() throws Exception {
         userRep.deleteAllInBatch();
